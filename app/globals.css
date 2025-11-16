@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+:root {
+  --brand-primary: #7BAE7F;
+  --brand-primary-light: #A8C9AB;
+  --brand-primary-dark: #5F8C62;
+  --brand-accent-yellow: #F0D77B;
+  --brand-accent-red: #E26B5A;
+  --brand-accent-orange: #E9A56B;
+  --brand-success: #74B76A;
+  --brand-warning: #EFB85C;
+  --brand-error: #D9534F;
+  --bg-main: #EEF5E9;
+  --bg-light: #F7FBF5;
+  --bg-card: #E3F0DB;
+  --text-primary: #2F3A2F;
+  --text-secondary: #4F5D4F;
+  --text-muted: #6E7D6E;
+  --text-on-primary: #FFFFFF;
+  --input-border: #C8D8C3;
+  --input-bg: #FFFFFF;
+  --button-primary: #7BAE7F;
+  --button-primary-hover: #6AA86E;
+  --status-fresh: #7AC96F;
+  --status-near-expiry: #EFB85C;
+  --status-expired: #D9534F;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: rgba(123, 174, 127, 0.2);
+}
+
+button:not(.no-min-size), a:not(.no-min-size) {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
