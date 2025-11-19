@@ -12,28 +12,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
+import { calculatePredictedExpiry, calculateStatus } from "@/lib/utils/expiry-prediction";
 import { ArrowLeft } from 'lucide-react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 
 const CATEGORIES = ["Dairy", "Fruit", "Vegetable", "Meat", "Poultry", "Other"];
-
 const STORAGE_LOCATIONS = ["Refrigerator", "Freezer", "Pantry", "Counter"];
-
-function calculateStatus(expiryDate: string): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expiryDate);
-  expiry.setHours(0, 0, 0, 0);
-  
-  const diffTime = expiry.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) return "expired";
-  if (diffDays <= 3) return "near-expiry";
-  return "fresh";
-}
 
 export function AddFoodForm() {
   const router = useRouter();
@@ -47,6 +33,9 @@ export function AddFoodForm() {
     storage_location: "",
     origin: "",
     notes: "",
+    temperature: "",
+    humidity: "",
+    ph: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,16 +52,34 @@ export function AddFoodForm() {
       return;
     }
 
-    const status = calculateStatus(formData.expiry_date);
+    const sensorData = {
+      temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+      humidity: formData.humidity ? parseFloat(formData.humidity) : undefined,
+      ph: formData.ph ? parseFloat(formData.ph) : undefined,
+    };
+
+    const cleanSensorData = Object.fromEntries(
+      Object.entries(sensorData).filter(([_, v]) => v !== undefined)
+    );
+
+    const predictedExpiry = calculatePredictedExpiry(
+      formData.expiry_date,
+      Object.keys(cleanSensorData).length > 0 ? cleanSensorData : null
+    );
+
+    const status = calculateStatus(predictedExpiry);
 
     const { error: insertError } = await supabase.from("food_items").insert({
       user_id: user.id,
       name: formData.name,
       category: formData.category,
-      expiry_date: formData.expiry_date,
+      declared_expiry_date: formData.expiry_date,
+      predicted_expiry_date: predictedExpiry,
+      expiry_date: predictedExpiry,
       storage_location: formData.storage_location || null,
       origin: formData.origin || null,
       notes: formData.notes || null,
+      sensor_data: Object.keys(cleanSensorData).length > 0 ? cleanSensorData : null,
       status: status,
     });
 
@@ -159,6 +166,65 @@ export function AddFoodForm() {
             onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
             className="h-12 rounded-2xl border-[var(--input-border)] bg-white focus:border-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
           />
+          <p className="text-xs text-[var(--text-secondary)]">
+            This will be adjusted based on storage conditions
+          </p>
+        </div>
+
+        <div className="space-y-4 p-4 bg-[#F7FBF5] rounded-2xl">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+            Storage Conditions (Optional)
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Enter sensor data to predict more accurate expiry dates
+          </p>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="temperature" className="text-xs text-[var(--text-secondary)]">
+                Temp (°C)
+              </Label>
+              <Input
+                id="temperature"
+                type="number"
+                step="0.1"
+                placeholder="12.5"
+                value={formData.temperature}
+                onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
+                className="h-10 rounded-xl border-[var(--input-border)] bg-white text-sm"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="humidity" className="text-xs text-[var(--text-secondary)]">
+                Humidity (%)
+              </Label>
+              <Input
+                id="humidity"
+                type="number"
+                step="1"
+                placeholder="75"
+                value={formData.humidity}
+                onChange={(e) => setFormData({ ...formData, humidity: e.target.value })}
+                className="h-10 rounded-xl border-[var(--input-border)] bg-white text-sm"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="ph" className="text-xs text-[var(--text-secondary)]">
+                pH Level
+              </Label>
+              <Input
+                id="ph"
+                type="number"
+                step="0.1"
+                placeholder="6.5"
+                value={formData.ph}
+                onChange={(e) => setFormData({ ...formData, ph: e.target.value })}
+                className="h-10 rounded-xl border-[var(--input-border)] bg-white text-sm"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Origin (Optional) */}

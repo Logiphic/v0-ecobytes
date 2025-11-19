@@ -1,37 +1,28 @@
-import { redirect } from 'next/navigation';
-import { createClient } from "@/lib/supabase/server";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { CompostForm } from "@/components/forms/compost-form";
+"use client"
 
-export default async function CompostPage({ searchParams }: { searchParams: Promise<{ itemId?: string }> }) {
-  const params = await searchParams;
-  const supabase = await createClient();
+import { Plus } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { MyCompostRequests } from "@/components/compost/my-compost-requests"
+import Link from "next/link"
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData?.user) {
-    redirect("/auth/login");
-  }
-
-  let foodItem = null;
-  if (params.itemId) {
-    const { data } = await supabase
-      .from("food_items")
-      .select("*")
-      .eq("id", params.itemId)
-      .eq("user_id", userData.user.id)
-      .single();
-    
-    foodItem = data;
-  }
-
+export default function CompostPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <DashboardHeader user={userData.user} />
-      <main className="flex-1 bg-muted/30 p-6">
-        <div className="container mx-auto max-w-2xl">
-          <CompostForm foodItem={foodItem} />
-        </div>
-      </main>
+    <div className="min-h-screen bg-[var(--bg-main)]">
+      {/* Main Content - Requests List */}
+      <MyCompostRequests />
+
+      {/* Floating Add Button */}
+      <div className="fixed bottom-6 left-0 right-0 px-4">
+        <Button
+          asChild
+          className="w-full h-14 rounded-2xl bg-white hover:bg-gray-50 text-lime-600 border-2 border-lime-600 shadow-lg font-semibold text-base"
+        >
+          <Link href="/dashboard/compost/new">
+            <Plus className="h-5 w-5 mr-2" />
+            Add New Compost Request
+          </Link>
+        </Button>
+      </div>
     </div>
-  );
+  )
 }

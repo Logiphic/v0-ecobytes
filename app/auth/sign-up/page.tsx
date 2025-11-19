@@ -9,11 +9,29 @@ import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { ArrowLeft } from 'lucide-react';
 import Image from "next/image";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const COUNTRY_CODES = [
+  { code: "+971", country: "UAE", flag: "🇦🇪", pattern: /^5[0-9]{8}$/ },
+  { code: "+1", country: "USA", flag: "🇺🇸", pattern: /^[2-9][0-9]{9}$/ },
+  { code: "+44", country: "UK", flag: "🇬🇧", pattern: /^[1-9][0-9]{9,10}$/ },
+  { code: "+91", country: "India", flag: "🇮🇳", pattern: /^[6-9][0-9]{9}$/ },
+  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦", pattern: /^5[0-9]{8}$/ },
+  { code: "+20", country: "Egypt", flag: "🇪🇬", pattern: /^1[0-9]{9}$/ },
+];
 
 export default function SignUpPage() {
   const [activeTab, setActiveTab] = useState<"email" | "phone">("email");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [countryCode, setCountryCode] = useState("+971");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"consumer" | "retailer" | "charity" | "farm">("consumer");
@@ -21,11 +39,36 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/[A-Za-z]/.test(pwd)) {
+      return "Password must contain at least one letter";
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return "Password must contain at least one number";
+    }
+    return null;
+  };
+
+  const validatePhoneNumber = (phone: string, code: string): boolean => {
+    const country = COUNTRY_CODES.find(c => c.code === code);
+    if (!country) return false;
+    return country.pattern.test(phone);
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -33,9 +76,17 @@ export default function SignUpPage() {
       return;
     }
 
+    if (activeTab === "phone" && !validatePhoneNumber(phoneNumber, countryCode)) {
+      setError("Invalid phone number for selected country");
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    
     try {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: activeTab === "email" ? email : `${phoneNumber}@phone.ecobytes.app`,
         password,
         options: {
           emailRedirectTo:
@@ -44,6 +95,7 @@ export default function SignUpPage() {
           data: {
             full_name: fullName,
             role: role,
+            phone: activeTab === "phone" ? `${countryCode}${phoneNumber}` : null,
           },
         },
       });
@@ -59,7 +111,7 @@ export default function SignUpPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-[3rem] border-[6px] border-gray-900 bg-card p-8 shadow-2xl">
+        <div className="rounded-[3rem] bg-card p-8 shadow-2xl border-transparent border-none border-0 shadow-none">
           <Button
             variant="ghost"
             size="icon"
@@ -84,8 +136,12 @@ export default function SignUpPage() {
           <div className="mb-6 flex gap-2">
             <Button
               type="button"
-              variant={activeTab === "email" ? "default" : "secondary"}
-              className="flex-1 rounded-full bg-primary text-white hover:bg-primary/90 data-[state=inactive]:bg-secondary data-[state=inactive]:text-foreground"
+              variant="secondary"
+              className={`flex-1 rounded-full transition-colors ${
+                activeTab === "email" 
+                  ? "bg-lime-600 text-white hover:bg-lime-700" 
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
               onClick={() => setActiveTab("email")}
               size="sm"
             >
@@ -93,8 +149,12 @@ export default function SignUpPage() {
             </Button>
             <Button
               type="button"
-              variant={activeTab === "phone" ? "default" : "secondary"}
-              className="flex-1 rounded-full bg-primary text-white hover:bg-primary/90 data-[state=inactive]:bg-secondary data-[state=inactive]:text-foreground"
+              variant="secondary"
+              className={`flex-1 rounded-full transition-colors ${
+                activeTab === "phone" 
+                  ? "bg-lime-600 text-white hover:bg-lime-700" 
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
               onClick={() => setActiveTab("phone")}
               size="sm"
             >
@@ -115,19 +175,45 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">
-                {activeTab === "email" ? "Email" : "Phone Number"}
-              </Label>
-              <Input
-                type={activeTab === "email" ? "email" : "tel"}
-                placeholder=""
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl border-gray-200 bg-white"
-              />
-            </div>
+            {activeTab === "email" ? (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Email</Label>
+                <Input
+                  type="email"
+                  placeholder=""
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl border-gray-200 bg-white"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Phone Number</Label>
+                <div className="flex gap-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="w-32 rounded-xl border-gray-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                      {COUNTRY_CODES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.flag} {country.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="tel"
+                    placeholder="Phone number"
+                    required
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    className="flex-1 rounded-xl border-gray-200 bg-white"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-foreground">Password</Label>
@@ -138,6 +224,9 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-xl border-gray-200 bg-white"
               />
+              <p className="text-xs text-muted-foreground text-lime-700">
+                Min 8 characters, at least one letter and one number
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -201,11 +290,11 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
 
             <Button
               type="submit"
-              className="w-full rounded-full bg-primary text-white hover:bg-primary/90"
+              className="w-full rounded-full bg-lime-600 text-white hover:bg-lime-700"
               disabled={isLoading}
               size="lg"
             >

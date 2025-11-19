@@ -211,7 +211,7 @@ export function FoodDetailCard({ item, onClose }: FoodDetailCardProps) {
           
           {status.type === "near-expiry" && (
             <Button
-              onClick={() => router.push(`/dashboard/donate?itemId=${item.id}`)}
+              onClick={() => router.push(`/dashboard/donate/new`)}
               className="w-full bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-dark)] text-white h-12 rounded-2xl font-semibold bg-[rgba(239,184,92,1)]"
             >
               Donate Item

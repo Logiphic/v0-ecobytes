@@ -5,13 +5,13 @@ import { X, Camera, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { calculatePredictedExpiry, calculateStatus } from "@/lib/utils/expiry-prediction";
 
 interface QRData {
   name: string;
   category: string;
   expiry: string;
   harvest_info?: string;
-  authenticity?: string;
   origin?: string;
   farm?: string;
   harvest_id?: string;
@@ -19,6 +19,14 @@ interface QRData {
     ph?: number;
     temperature?: number;
     humidity?: number;
+  };
+  authenticity?: {
+    brand?: string;
+    manufacturer?: string;
+    origin?: string;
+    batch?: string;
+    certification?: string;
+    status?: string;
   };
   quantity?: number;
   unit?: string;
@@ -123,16 +131,10 @@ export function QrScanner({ onClose, onSuccess }: QrScannerProps) {
         return;
       }
 
-      const today = new Date();
-      const expiryDate = new Date(qrData.expiry);
-      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      let status = 'fresh';
-      if (daysUntilExpiry <= 0) {
-        status = 'expired';
-      } else if (daysUntilExpiry <= 3) {
-        status = 'expiring';
-      }
+      const predictedExpiry = calculatePredictedExpiry(qrData.expiry, qrData.sensor_data);
+      const status = calculateStatus(predictedExpiry);
+
+      const authenticityData = qrData.authenticity || {};
 
       const { error: insertError } = await supabase
         .from('food_items')
@@ -142,14 +144,21 @@ export function QrScanner({ onClose, onSuccess }: QrScannerProps) {
           category: qrData.category,
           quantity: qrData.quantity || 1,
           unit: qrData.unit || 'unit',
-          expiry_date: qrData.expiry,
+          declared_expiry_date: qrData.expiry,
+          predicted_expiry_date: predictedExpiry,
+          expiry_date: predictedExpiry, // Keep for backward compatibility
           status,
           harvest_info: qrData.harvest_info,
-          authenticity: qrData.authenticity,
           origin: qrData.origin,
           farm: qrData.farm,
           harvest_id: qrData.harvest_id,
-          sensor_data: qrData.sensor_data
+          sensor_data: qrData.sensor_data,
+          authenticity_brand: authenticityData.brand,
+          authenticity_manufacturer: authenticityData.manufacturer,
+          authenticity_origin: authenticityData.origin,
+          authenticity_batch: authenticityData.batch,
+          authenticity_certification: authenticityData.certification,
+          authenticity_status: authenticityData.status,
         });
 
       if (insertError) {
@@ -287,14 +296,14 @@ export function QrScanner({ onClose, onSuccess }: QrScannerProps) {
               <textarea
                 value={qrInput}
                 onChange={(e) => setQrInput(e.target.value)}
-                placeholder='{"name": "Tomato", "category": "Vegetables", "expiry": "2025-11-20", "harvest_id": "HRV123"}'
+                placeholder='{"name": "Tomato", "category": "Vegetables", "expiry": "2025-11-20", "sensor_data": {"temperature": 12, "humidity": 75, "ph": 6.5}, "authenticity": {"brand": "FreshFarm", "status": "Verified"}}'
                 className="w-full h-32 px-4 py-3 border border-[#C8D8C3] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7BAE7F] resize-none bg-[#FFFFFF]"
                 disabled={loading}
               />
               
               <div className="text-xs text-[#6E7D6E] space-y-1 bg-[#F7FBF5] p-3 rounded-lg">
                 <p className="font-semibold text-[#4F5D4F]">Required: name, category, expiry (YYYY-MM-DD)</p>
-                <p className="font-semibold text-[#4F5D4F]">Optional: harvest_info, origin, farm, harvest_id, sensor_data</p>
+                <p className="font-semibold text-[#4F5D4F]">Optional: sensor_data, authenticity, harvest_info, origin</p>
               </div>
 
               <div className="flex gap-2">

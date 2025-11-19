@@ -9,8 +9,8 @@ export function MobileNav() {
 
   const navItems = [
     { icon: Package, label: 'Track', href: '/dashboard/track' },
-    { icon: Heart, label: 'Donate', href: '/dashboard/donations' },
-    { icon: Leaf, label: 'Compost', href: '/dashboard/composting' },
+    { icon: Heart, label: 'Donate', href: '/dashboard/donate' },
+    { icon: Leaf, label: 'Compost', href: '/dashboard/compost' },
     { icon: Award, label: 'Rewards', href: '/dashboard/rewards' },
   ];
 

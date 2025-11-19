@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Gift } from 'lucide-react';
+import { ArrowLeft, PlusIcon,Gift } from 'lucide-react';
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -77,21 +77,21 @@ export function DonationHistory() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild className="shrink-0">
               <Link href="/dashboard">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
             <div>
-              <CardTitle>Donation History</CardTitle>
-              <CardDescription>Track your contributions to the community</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Donation Requests</CardTitle>
+              <CardDescription className="text-sm">Track your contributions to the community</CardDescription>
             </div>
           </div>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/dashboard/donate">
-              <Gift className="mr-2 h-4 w-4" />
+              <PlusIcon className="mr-2 h-4 w-4" />
               New Donation
             </Link>
           </Button>
@@ -110,40 +110,44 @@ export function DonationHistory() {
             </Button>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Food Item</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Organization</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {donations.map((donation) => (
-                <TableRow key={donation.id}>
-                  <TableCell className="font-medium">
-                    {formatDate(donation.donation_date)}
-                  </TableCell>
-                  <TableCell>{donation.food_name}</TableCell>
-                  <TableCell>
-                    {donation.quantity} {donation.unit}
-                  </TableCell>
-                  <TableCell>{donation.organization}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                      {donation.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {donation.notes || "-"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto -mx-6 sm:mx-0">
+            <div className="inline-block min-w-full align-middle px-6 sm:px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[100px]">Date</TableHead>
+                    <TableHead className="min-w-[120px]">Food Item</TableHead>
+                    <TableHead className="min-w-[80px]">Quantity</TableHead>
+                    <TableHead className="min-w-[140px]">Organization</TableHead>
+                    <TableHead className="min-w-[80px]">Status</TableHead>
+                    <TableHead className="min-w-[100px]">Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {donations.map((donation) => (
+                    <TableRow key={donation.id}>
+                      <TableCell className="font-medium">
+                        {formatDate(donation.donation_date)}
+                      </TableCell>
+                      <TableCell>{donation.food_name}</TableCell>
+                      <TableCell>
+                        {donation.quantity} {donation.unit}
+                      </TableCell>
+                      <TableCell>{donation.organization}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                          {donation.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {donation.notes || "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
