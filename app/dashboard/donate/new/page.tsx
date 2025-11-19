@@ -112,7 +112,7 @@ export default function NewDonationPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto p-6 space-y-6">
+      <div className="max-w-2xl mx-auto p-6 pb-24 space-y-6">
         {step === 1 && (
           <div className="space-y-4">
             <div>
@@ -170,8 +170,33 @@ export default function NewDonationPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-[var(--text-primary)] mb-2 block">Type</Label>
-                <PickupDeliverySelector value={deliveryType} onChange={setDeliveryType} />
+                <Label className="text-sm font-medium text-[var(--text-primary)] mb-3 block">Type</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`flex-1 h-11 rounded-xl text-sm border-[var(--input-border)] ${
+                      deliveryType === 'pickup' 
+                        ? 'bg-[#7BAE7F] text-white border-[#7BAE7F] hover:bg-[#6a9d6e]' 
+                        : 'bg-white text-[var(--text-primary)] hover:bg-gray-50'
+                    }`}
+                    onClick={() => setDeliveryType('pickup')}
+                  >
+                    📦 Pickup
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`flex-1 h-11 rounded-xl text-sm border-[var(--input-border)] ${
+                      deliveryType === 'delivery' 
+                        ? 'bg-[#7BAE7F] text-white border-[#7BAE7F] hover:bg-[#6a9d6e]' 
+                        : 'bg-white text-[var(--text-primary)] hover:bg-gray-50'
+                    }`}
+                    onClick={() => setDeliveryType('delivery')}
+                  >
+                    🚚 Delivery
+                  </Button>
+                </div>
               </div>
               
               <div>
@@ -183,22 +208,6 @@ export default function NewDonationPage() {
                   onSelect={setSelectedSlot}
                 />
               </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setStep(2)}
-                variant="outline"
-                className="flex-1 h-12 rounded-2xl border-[var(--input-border)]"
-              >
-                Back
-              </Button>
-              <Button
-                onClick={() => setStep(4)}
-                disabled={!deliveryType || !selectedSlot}
-                className="flex-1 h-12 rounded-2xl bg-lime-600 hover:bg-lime-700 text-white font-semibold"
-              >
-                Continue
-              </Button>
             </div>
           </div>
         )}
@@ -233,26 +242,36 @@ export default function NewDonationPage() {
                 className="min-h-[100px] rounded-2xl border-[var(--input-border)] bg-white"
               />
             </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setStep(3)}
-                variant="outline"
-                className="flex-1 h-12 rounded-2xl border-[var(--input-border)]"
-                disabled={submitting}
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 h-12 rounded-2xl bg-lime-600 hover:bg-lime-700 text-white font-semibold"
-              >
-                {submitting ? "Submitting..." : "Send For Donation"}
-              </Button>
-            </div>
           </div>
         )}
+      </div>
+
+      {/* Fixed Bottom Button Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--input-border)] p-4 shadow-lg">
+        <div className="max-w-2xl mx-auto flex gap-3">
+          {step > 1 && (
+            <Button
+              onClick={() => setStep(step - 1)}
+              variant="outline"
+              className="flex-1 h-12 rounded-2xl border-[var(--input-border)]"
+              disabled={submitting}
+            >
+              Back
+            </Button>
+          )}
+          <Button
+            onClick={step === 4 ? handleSubmit : () => setStep(step + 1)}
+            disabled={
+              (step === 1 && selectedItems.length === 0) ||
+              (step === 2 && !selectedOrganization) ||
+              (step === 3 && (!deliveryType || !selectedSlot)) ||
+              submitting
+            }
+            className="flex-1 h-12 rounded-2xl bg-lime-600 hover:bg-lime-700 text-white font-semibold"
+          >
+            {submitting ? "Submitting..." : step === 4 ? "Send For Donation" : `Continue${step === 1 ? ` (${selectedItems.length} items)` : ''}`}
+          </Button>
+        </div>
       </div>
     </div>
   )

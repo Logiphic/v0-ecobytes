@@ -100,37 +100,37 @@ export function MultiItemSelector({ selectedItems, onSelectionChange }: MultiIte
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex items-center gap-4 p-4 bg-white rounded-xl border border-[var(--input-border)]"
+          className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[var(--input-border)]"
         >
           <Checkbox
             checked={selectedItems.includes(item.id)}
             onCheckedChange={() => toggleItem(item.id)}
-            className="h-5 w-5"
+            className="h-5 w-5 flex-shrink-0"
           />
           
-          <div className="flex items-center gap-3 flex-1">
-            <div className="text-3xl">{getItemEmoji(item.category)}</div>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="text-2xl flex-shrink-0">{getItemEmoji(item.category)}</div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-[var(--text-primary)]">{item.name}</h3>
-              <p className="text-sm text-[var(--text-muted)]">
+              <h3 className="font-semibold text-sm text-[var(--text-primary)] truncate">{item.name}</h3>
+              <p className="text-xs text-[var(--text-muted)]">
                 Expires: {new Date(item.expiry_date).toLocaleDateString()}
               </p>
             </div>
             
-            <div className={`w-3 h-3 rounded-full ${getStatusColor(item.status)}`} />
+            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(item.status)}`} />
           </div>
 
           {selectedItems.includes(item.id) && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <Input
                 type="number"
                 min="1"
                 max={item.quantity}
                 value={quantities[item.id] || item.quantity}
                 onChange={(e) => updateQuantity(item.id, parseFloat(e.target.value))}
-                className="w-20 h-10"
+                className="w-16 h-9 text-sm"
               />
-              <span className="text-sm text-[var(--text-muted)]">{item.unit}</span>
+              <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{item.unit}</span>
             </div>
           )}
         </div>
